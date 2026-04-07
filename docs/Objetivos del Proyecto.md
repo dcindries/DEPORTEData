@@ -48,7 +48,10 @@ Desarrollar un sistema funcional para **predecir la evolución anual del empleo 
   - Repositorio inicial en GitHub con estructura de carpetas (`data/`, `scripts/`, `docs/`).  
   - Configuración de ramas (`main`, `develop`) y tablero Kanban.  
   - Catálogo preliminar de fuentes de datos (en `docs/fuentes`).  
-  - Descarga y almacenamiento de datos crudos EPA/INE (p. ej. CSV en `data/raw`).  
+  - Descarga y almacenamiento de datos crudos EPA/INE (p. ej. CSV en `data/raw`).
+    Enlaces:
+     * https://www.educacionfpydeportes.gob.es/mc/deportedata/empleo/resultados.html
+     * https://estadisticas.educacion.gob.es/DeporteDynPx/deportebase/index.htm?type=pcaxis&path=/empleo/&file=pcaxis
   - Documento de objetivos generales y plan de trabajo.
   - Página Web visual.
 
