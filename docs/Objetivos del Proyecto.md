@@ -129,4 +129,34 @@ Este cronograma está optimizado para un desarrollo corto, priorizando:
 2. **Recopilar datos oficiales:** Localizar y descargar las series de empleo deportivo (EPA/INE vía DEPORTEData, informes CSD 2020-2025). Guardar las fuentes originales y documentarlas en `docs/fuentes`.  
 3. **Configurar el repositorio:** Crear el repositorio Git, definir ramas (`main`, `develop`), proteger la principal y abrir el tablero Kanban. Añadir etiquetas y plantillas (issue, PR).  
 4. **Desarrollar pipeline básico:** Escribir un primer script (Python) que cargue los datos crudos descargados y genere un archivo limpio (ej. `data/processed/empleo_deportivo.csv`). Verificar la integridad de los datos procesados.  
-5. **Diseñar modelo de datos y plan de análisis:** En el README inicial o documento de planificación, bosquejar el modelo analítico (columnas esperadas) y la estrategia de modelado (qué métodos se probarán). Esto servirá de guía para el primer sprint.  
+5. **Diseñar modelo de datos y plan de análisis:** En el README inicial o documento de planificación, bosquejar el modelo analítico (columnas esperadas) y la estrategia de modelado (qué métodos se probarán). Esto servirá de guía para el primer sprint.
+
+## 13. Chatbot consultor de empleo deportivo  
+
+Se incorporará un chatbot como módulo adicional del proyecto, orientado a facilitar la consulta e interpretación de los resultados obtenidos. Este chatbot actuará como asistente conversacional especializado en el mercado laboral deportivo, permitiendo al usuario interactuar con los datos y predicciones de forma sencilla.
+
+### Objetivo  
+Proporcionar una interfaz conversacional que permita consultar predicciones, tendencias y características del empleo deportivo en España a partir de los datos y modelos desarrollados.
+
+### Funcionalidades  
+- Consulta de predicciones (ej. empleo esperado en próximos años).  
+- Explicación de tendencias del empleo deportivo.  
+- Respuestas a preguntas generales sobre el sector.  
+- Explicación básica del modelo utilizado y sus resultados.  
+
+### Tecnología  
+- Backend en Python (FastAPI o Flask).  
+- Integración con modelo de lenguaje o sistema de respuestas predefinidas.  
+- Acceso a datos procesados y resultados del modelo.  
+
+### Criterios de aceptación  
+- El chatbot responde a preguntas relacionadas con datos y predicciones del proyecto.  
+- Está accesible desde la web o mediante un endpoint.  
+- Utiliza información real del sistema.  
+
+### Limitaciones  
+- No ofrecerá asesoramiento profesional personalizado.  
+- Dependencia de la calidad de los datos y del modelo predictivo.  
+
+### Valor añadido  
+Mejora la accesibilidad del sistema y facilita la comprensión de los resultados, aportando una capa de interacción adicional al proyecto.
