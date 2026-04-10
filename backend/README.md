@@ -34,7 +34,7 @@ uvicorn app.main:app --reload --port 8000
 Endpoints disponibles:
 
 - Health check: `http://localhost:8000/health`
-- Documentación Swagger: `http://localhost:8000/endpoints`
+- Documentación Swagger: `http://localhost:8000/docs`
 
 ## Endpoints
 
