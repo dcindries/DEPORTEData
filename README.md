@@ -149,40 +149,11 @@ deportedata/
 │   └── README.md
 │
 ├── deploy/
+│   ├── docker-compose.yml        # Orquestación de todos los servicios
+│   ├── docker-compose.dev.yml    # Override para desarrollo/testing
+│   ├── .env.example
+│   ├── nginx/
 │   ├── scripts/
-│   │   ├── setup-common.sh            # Instalar Docker + CloudWatch agent
-│   │   ├── setup-frontend.sh          # Bootstrap EC2 Frontend
-│   │   ├── setup-backend.sh           # Bootstrap EC2 Backend
-│   │   ├── setup-master.sh            # docker swarm init + ray head
-│   │   ├── setup-worker.sh            # docker swarm join + ray worker
-│   │   ├── setup-security-groups.sh   # Crear SGs con reglas
-│   │   ├── setup-s3.sh               # Crear buckets + políticas
-│   │   ├── setup-rds.sh              # Crear Aurora cluster + schemas
-│   │   ├── full-deploy.sh            # Orquesta todo en orden
-│   │   └── teardown.sh               # Destruir todo (para labs)
-│   │
-│   ├── security-groups/
-│   │   ├── sg-frontend.json           # Reglas SG-Frontend
-│   │   ├── sg-backend.json            # Reglas SG-Backend
-│   │   ├── sg-admin.json             # Reglas SG-Admin
-│   │   ├── sg-master.json            # Reglas SG-Master
-│   │   ├── sg-workers.json           # Reglas SG-Workers
-│   │   └── sg-rds.json              # Reglas SG-RDS
-│   │
-│   ├── cloudwatch/
-│   │   ├── agent-config-frontend.json
-│   │   ├── agent-config-backend.json
-│   │   ├── agent-config-master.json
-│   │   ├── agent-config-worker.json
-│   │   └── alarms.json               # Alarmas: CPU > 80%, disco, etc.
-│   │
-│   ├── sql/
-│   │   ├── 001_create_database.sql
-│   │   ├── 002_create_tables.sql      # Star schema
-│   │   ├── 003_create_indexes.sql
-│   │   └── 004_seed_data.sql          # Datos iniciales de prueba
-│   │
-│   ├── .env.example                   # Variables globales del despliegue
 │   └── README.md
 │
 ├── docs/
