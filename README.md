@@ -16,45 +16,186 @@
 ## Estructura del repositorio
 
 ```
-/
+deportedata/
+│
 ├── .github/
 │   └── workflows/
-│       ├── ci-data-ia.yml        # Workflow exclusivo de Data/IA
-│       ├── ci-frontend.yml       # Workflow exclusivo de Frontend
-│       ├── ci-backend.yml        # Workflow exclusivo de Backend
-│       └── ci-deploy.yml         # Workflow exclusivo de Deploy
-│
-├── data-ia/
-│   ├── Dockerfile
-│   ├── .env.example
-│   ├── src/
-│   ├── tests/
-│   └── README.md                 # Documentación específica del módulo
+│       ├── ci-data-ia.yml              # Test + build imágenes Ray
+│       ├── ci-frontend.yml             # Lint + build + push imagen
+│       ├── ci-backend.yml              # Test + build + push imagen
+│       └── ci-deploy.yml               # Validación de configs + deploy
 │
 ├── frontend/
 │   ├── Dockerfile
 │   ├── .env.example
+│   ├── nginx/
+│   │   └── default.conf               # Sirve estáticos + proxy al backend
 │   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   │   └── api.ts                  # Cliente HTTP → Backend API pública
+│   │   └── utils/
+│   ├── public/
+│   ├── package.json
 │   ├── tests/
+│   │   └── ...
+│   ├── docker-compose.yml              # Standalone: nginx + app
 │   └── README.md
 │
 ├── backend/
-│   ├── Dockerfile
+│   ├── api_publica/
+│   │   ├── Dockerfile
+│   │   ├── main.py                     # FastAPI app :8000
+│   │   ├── routers/
+│   │   │   ├── __init__.py
+│   │   │   ├── datos.py                # GET /api/datos/* → Aurora
+│   │   │   ├── predicciones.py         # GET /api/predicciones/* → ARIMA/Prophet
+│   │   │   └── rag.py                  # POST /api/rag/consulta → ChromaDB
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── db.py                   # Conexión Aurora (SQLAlchemy)
+│   │   │   ├── rag_client.py           # Cliente ChromaDB + embeddings
+│   │   │   └── forecast.py             # Lógica de predicción temporal
+│   │   └── requirements.txt
+│   │
+│   ├── api_privada/
+│   │   ├── Dockerfile
+│   │   ├── main.py                     # FastAPI app :8001
+│   │   ├── auth.py                     # Verificación API key (Header)
+│   │   ├── routers/
+│   │   │   ├── __init__.py
+│   │   │   ├── upload.py               # POST /admin/upload/csv → S3
+│   │   │   ├── jobs.py                 # POST /admin/jobs/lanzar → Ray
+│   │   │   └── ingesta_rag.py          # POST /admin/rag/reindexar → ChromaDB
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── s3_client.py            # Upload/download S3
+│   │   │   ├── ray_client.py           # Conexión Ray Head (master)
+│   │   │   └── chroma_ingest.py        # Chunking + embeddings + upsert
+│   │   └── requirements.txt
+│   │
+│   ├── shared/                         # Código compartido entre APIs
+│   │   ├── __init__.py
+│   │   ├── config.py                   # Lectura centralizada de env vars
+│   │   ├── models.py                   # Modelos Pydantic compartidos
+│   │   └── constants.py                # Nombres de tablas, buckets, etc.
+│   │
+│   ├── nginx/
+│   │   └── nginx.conf                  # Reverse proxy → :8000 y :8001
+│   │
 │   ├── .env.example
-│   ├── src/
+│   ├── docker-compose.yml              # Standalone: nginx + api_pub + api_priv + chromadb
 │   ├── tests/
+│   │   ├── test_api_publica/
+│   │   │   ├── test_datos.py
+│   │   │   ├── test_predicciones.py
+│   │   │   └── test_rag.py
+│   │   └── test_api_privada/
+│   │       ├── test_upload.py
+│   │       ├── test_jobs.py
+│   │       └── test_ingesta.py
+│   └── README.md
+│
+├── data-ia/
+│   ├── workers/
+│   │   ├── Dockerfile                  # Imagen Ray Worker
+│   │   ├── tasks/
+│   │   │   ├── __init__.py
+│   │   │   ├── limpieza.py             # @ray.remote — limpieza CSVs INE
+│   │   │   ├── transformacion.py       # @ray.remote — normalización star schema
+│   │   │   └── carga.py               # @ray.remote — escritura en Aurora
+│   │   ├── config.py
+│   │   └── utils/
+│   │       ├── __init__.py
+│   │       ├── s3_client.py
+│   │       └── db_client.py
+│   │
+│   ├── master/
+│   │   ├── Dockerfile                  # Imagen Ray Head
+│   │   └── entrypoint.sh              # ray start --head + block
+│   │
+│   ├── pipelines/
+│   │   ├── __init__.py
+│   │   ├── pipeline_empleo.py          # Pipeline completo empleo deportivo
+│   │   ├── pipeline_federaciones.py    # Pipeline federaciones
+│   │   └── schemas/
+│   │       ├── empleo_deporte.json     # Mapping columnas + tipado
+│   │       └── federaciones.json
+│   │
+│   ├── modelos/
+│   │   ├── forecasting/
+│   │   │   ├── arima_trainer.py        # Entrenamiento ARIMA
+│   │   │   ├── prophet_trainer.py      # Entrenamiento Prophet
+│   │   │   └── evaluate.py            # Métricas comparativas
+│   │   └── content_moderation/
+│   │       ├── train.py               # Fine-tuning RoBERTa toxicidad ES
+│   │       ├── inference.py           # Predicción en batch
+│   │       └── config.py             # Hiperparámetros, label_mapping
+│   │
+│   ├── notebooks/                     # Exploración y prototipado
+│   │   ├── EDA_empleo.ipynb
+│   │   ├── EDA_federaciones.ipynb
+│   │   └── pruebas_rag.ipynb
+│   │
+│   ├── docker-compose.swarm.yml       # Stack Swarm: master + workers
+│   ├── .env.example
+│   ├── requirements.txt
+│   ├── tests/
+│   │   ├── test_limpieza.py
+│   │   ├── test_transformacion.py
+│   │   └── test_carga.py
 │   └── README.md
 │
 ├── deploy/
-│   ├── docker-compose.yml        # Orquestación de todos los servicios
-│   ├── docker-compose.dev.yml    # Override para desarrollo/testing
-│   ├── .env.example
-│   ├── nginx/
 │   ├── scripts/
+│   │   ├── setup-common.sh            # Instalar Docker + CloudWatch agent
+│   │   ├── setup-frontend.sh          # Bootstrap EC2 Frontend
+│   │   ├── setup-backend.sh           # Bootstrap EC2 Backend
+│   │   ├── setup-master.sh            # docker swarm init + ray head
+│   │   ├── setup-worker.sh            # docker swarm join + ray worker
+│   │   ├── setup-security-groups.sh   # Crear SGs con reglas
+│   │   ├── setup-s3.sh               # Crear buckets + políticas
+│   │   ├── setup-rds.sh              # Crear Aurora cluster + schemas
+│   │   ├── full-deploy.sh            # Orquesta todo en orden
+│   │   └── teardown.sh               # Destruir todo (para labs)
+│   │
+│   ├── security-groups/
+│   │   ├── sg-frontend.json           # Reglas SG-Frontend
+│   │   ├── sg-backend.json            # Reglas SG-Backend
+│   │   ├── sg-admin.json             # Reglas SG-Admin
+│   │   ├── sg-master.json            # Reglas SG-Master
+│   │   ├── sg-workers.json           # Reglas SG-Workers
+│   │   └── sg-rds.json              # Reglas SG-RDS
+│   │
+│   ├── cloudwatch/
+│   │   ├── agent-config-frontend.json
+│   │   ├── agent-config-backend.json
+│   │   ├── agent-config-master.json
+│   │   ├── agent-config-worker.json
+│   │   └── alarms.json               # Alarmas: CPU > 80%, disco, etc.
+│   │
+│   ├── sql/
+│   │   ├── 001_create_database.sql
+│   │   ├── 002_create_tables.sql      # Star schema
+│   │   ├── 003_create_indexes.sql
+│   │   └── 004_seed_data.sql          # Datos iniciales de prueba
+│   │
+│   ├── .env.example                   # Variables globales del despliegue
 │   └── README.md
 │
+├── docs/
+│   ├── arquitectura.md                # Diagrama + explicación completa
+│   ├── security-groups.md             # Tabla de reglas de entrada/salida
+│   ├── guia-despliegue.md            # Paso a paso para levantar todo
+│   ├── guia-aws-academy.md           # Particularidades del Learner Lab
+│   ├── api-publica.md                # Endpoints, request/response
+│   ├── api-privada.md                # Endpoints admin, autenticación
+│   └── pipelines.md                  # Cómo funciona el procesamiento Ray
+│
 ├── .gitignore
-└── README.md                     # ← Este archivo
+└── README.md
 ```
 
 Cada módulo es **autónomo**: tiene su propio `Dockerfile`, su `.env.example`, sus tests y su documentación. Esto permite que si falla una parte, solo se toca y recompila esa parte, no el proyecto entero.
