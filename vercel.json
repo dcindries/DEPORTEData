@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "if [ -f package.json ]; then npm install; elif [ -f frontend/package.json ]; then cd frontend && npm install; elif [ -f ../frontend/package.json ]; then cd ../frontend && npm install; else echo 'No frontend package.json found' && exit 1; fi",
-  "buildCommand": "if [ -f package.json ]; then npm run build && cp -R dist .vercel-dist; elif [ -f frontend/package.json ]; then cd frontend && npm run build && cp -R dist ../.vercel-dist; elif [ -f ../frontend/package.json ]; then cd ../frontend && npm run build && cp -R dist ../backend/.vercel-dist; else echo 'No frontend package.json found' && exit 1; fi",
+  "installCommand": "if [ -f ./vercel-install.sh ]; then sh ./vercel-install.sh; else sh ../vercel-install.sh; fi",
+  "buildCommand": "if [ -f ./vercel-build.sh ]; then sh ./vercel-build.sh; else sh ../vercel-build.sh; fi",
   "outputDirectory": ".vercel-dist",
   "rewrites": [
     {
