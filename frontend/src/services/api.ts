@@ -20,7 +20,8 @@ export type ChatResponse = {
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
 const normalizedBaseUrl = rawBaseUrl?.replace(/\/+$/, '');
 
-const DEFAULT_API_BASE_URL = 'https://deporte-data-backend.onrender.com';
+const isVercelHost = typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app');
+const DEFAULT_API_BASE_URL = isVercelHost ? '/api' : 'https://deporte-data-backend.onrender.com';
 
 const baseUrl = normalizedBaseUrl && /^https?:\/\//.test(normalizedBaseUrl)
   ? normalizedBaseUrl
