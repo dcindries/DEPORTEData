@@ -1,8 +1,9 @@
 import { Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
 import { Activity, Cpu, Waves } from 'lucide-react';
 import { DashboardEmbed } from '../../components/DashboardEmbed';
+import { appConfig } from '../../config';
 
-const telemetryUrl = import.meta.env.VITE_ADMIN_TELEMETRY_DASHBOARD_URL;
+const telemetryUrl = appConfig.adminTelemetryDashboardUrl;
 
 export function TelemetryPage() {
   return (

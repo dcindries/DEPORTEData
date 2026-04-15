@@ -5,7 +5,7 @@ const resources = {
   es: {
     translation: {
       appName: 'DEPORTEData',
-      publicTitle: 'Panel publico de analitica deportiva',
+      publicTitle: 'Panel público de analitica deportiva',
       publicDescription:
         'Visualiza indicadores abiertos y consulta el asistente contextual para explorar los datos publicados.',
       viewPublicDashboard: 'Dashboard publico',

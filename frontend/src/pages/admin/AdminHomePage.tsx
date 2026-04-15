@@ -2,8 +2,9 @@ import { Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine
 import { Activity, ShieldCheck, UserRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DashboardEmbed } from '../../components/DashboardEmbed';
+import { appConfig } from '../../config';
 
-const adminHomeUrl = import.meta.env.VITE_ADMIN_HOME_DASHBOARD_URL;
+const adminHomeUrl = appConfig.adminHomeDashboardUrl;
 
 export function AdminHomePage() {
   const { t } = useTranslation();

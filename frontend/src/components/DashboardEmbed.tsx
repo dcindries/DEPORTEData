@@ -1,4 +1,4 @@
-import { Alert, AspectRatio, Group, Paper, Stack, Text, ThemeIcon, Title } from '@mantine/core';
+import { Alert, Group, Paper, Stack, Text, ThemeIcon, Title } from '@mantine/core';
 import { LayoutPanelTop } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -6,9 +6,10 @@ type DashboardEmbedProps = {
   src?: string;
   title: string;
   description?: string;
+  minHeight?: string;
 };
 
-export function DashboardEmbed({ src, title, description }: DashboardEmbedProps) {
+export function DashboardEmbed({ src, title, description, minHeight = '560px' }: DashboardEmbedProps) {
   const { t } = useTranslation();
 
   return (
@@ -38,14 +39,16 @@ export function DashboardEmbed({ src, title, description }: DashboardEmbedProps)
                 {title}
               </Text>
             </div>
-            <AspectRatio ratio={16 / 9}>
+            <div className="embed-viewport" style={{ minHeight }}>
               <iframe
+                className="embed-iframe"
                 src={src}
                 title={title}
                 loading="lazy"
                 referrerPolicy="strict-origin-when-cross-origin"
+                style={{ minHeight, height: minHeight }}
               />
-            </AspectRatio>
+            </div>
           </div>
         ) : (
           <Alert color="blue" title={t('embeddedPanelLabel')}>

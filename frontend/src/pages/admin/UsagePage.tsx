@@ -1,8 +1,9 @@
 import { Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
 import { Clock3, MousePointerClick, Users } from 'lucide-react';
 import { DashboardEmbed } from '../../components/DashboardEmbed';
+import { appConfig } from '../../config';
 
-const usageUrl = import.meta.env.VITE_ADMIN_USAGE_DASHBOARD_URL;
+const usageUrl = appConfig.adminUsageDashboardUrl;
 
 export function UsagePage() {
   return (

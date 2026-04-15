@@ -1,8 +1,9 @@
 import { Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
 import { Eye, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { DashboardEmbed } from '../../components/DashboardEmbed';
+import { appConfig } from '../../config';
 
-const securityUrl = import.meta.env.VITE_ADMIN_SECURITY_DASHBOARD_URL;
+const securityUrl = appConfig.adminSecurityDashboardUrl;
 
 export function SecurityPage() {
   return (

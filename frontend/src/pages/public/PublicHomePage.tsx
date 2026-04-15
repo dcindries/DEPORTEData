@@ -15,8 +15,58 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChatbotWidget } from '../../components/ChatbotWidget';
+import { DashboardEmbed } from '../../components/DashboardEmbed';
 import { EmploymentLineChart } from '../../components/EmploymentLineChart';
+import { appConfig } from '../../config';
 import { type DashboardKpis, type DashboardSeries, dashboardApi } from '../../services/api';
+
+const grafanaBaseUrl = 'http://54.82.14.166:3000/d-solo/adp79lb/principal';
+const grafanaRange = 'orgId=1&from=1302878323442&to=1776263923442&timezone=browser&dtab=new-row';
+const publicDashboardUrl = appConfig.publicDashboardUrl || `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-1`;
+const publicDashboardPanels = [
+  {
+    title: 'Evolucion anual total',
+    description: 'Serie anual del empleo vinculado al deporte para contextualizar la tendencia general.',
+    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-1`,
+    minHeight: '420px',
+  },
+  {
+    title: 'Evolucion trimestral total',
+    description: 'Seguimiento trimestral para detectar aceleraciones, frenadas y cambios recientes.',
+    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-2`,
+    minHeight: '420px',
+  },
+  {
+    title: 'Distribucion por sexo',
+    description: 'Comparativa entre hombres y mujeres en el empleo deportivo agregado.',
+    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-3`,
+    minHeight: '360px',
+  },
+  {
+    title: 'Tipo de empleo',
+    description: 'Desglose entre empleo principal y secundario vinculado al deporte.',
+    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-4`,
+    minHeight: '360px',
+  },
+  {
+    title: 'Distribucion por edad',
+    description: 'Foto del ultimo periodo disponible por grupos de edad.',
+    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-5`,
+    minHeight: '360px',
+  },
+  {
+    title: 'Distribucion por estudios',
+    description: 'Comparativa del empleo deportivo segun nivel educativo.',
+    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-6`,
+    minHeight: '360px',
+  },
+  {
+    title: 'Jornada y situacion profesional',
+    description: 'Peso relativo del empleo asalariado, no asalariado y del tipo de jornada.',
+    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-7`,
+    minHeight: '360px',
+  },
+];
 
 export function PublicHomePage() {
   const { t } = useTranslation();
@@ -46,17 +96,17 @@ export function PublicHomePage() {
     {
       icon: LayoutDashboard,
       title: 'Dashboard conectado',
-      text: 'Los KPIs y la gráfica ya usan datos reales provenientes de CSV procesados por FastAPI.',
+      text: 'KPIs y visualizaciones combinan datos del backend con paneles embebidos de Grafana.',
     },
     {
       icon: Globe,
       title: 'Soporte multilenguaje',
-      text: 'Cambio de idioma rápido para demos, usuarios internos y presentaciones.',
+      text: 'Cambio de idioma rapido para demos, usuarios internos y presentaciones.',
     },
     {
       icon: Bot,
       title: 'Asistente contextual',
-      text: 'Chat integrado con el endpoint /chat para responder con métricas del dataset.',
+      text: 'Chat integrado con el backend para responder preguntas sobre el dataset.',
     },
   ];
 
@@ -68,7 +118,7 @@ export function PublicHomePage() {
             <Stack gap="lg">
               <div>
                 <Badge size="lg" radius="sm" variant="light" color="cyan">
-                  Analítica deportiva unificada
+                  Analitica deportiva unificada
                 </Badge>
                 <Title order={1} mt="md" maw={760} style={{ fontSize: 'clamp(2.4rem, 5vw, 4.4rem)', lineHeight: 1 }}>
                   {t('publicTitle')}
@@ -76,11 +126,17 @@ export function PublicHomePage() {
                 <Text c="dimmed" size="lg" maw={620} mt="md">
                   {t('publicDescription')}
                 </Text>
+                <Text size="sm" mt="sm" maw={540}>
+                  Una capa visual para seguir rendimiento, actividad y operacion desde un unico punto.
+                </Text>
               </div>
 
               <Group>
                 <Button component={Link} to="/admin/login" size="md">
                   Admin
+                </Button>
+                <Button component="a" href="#public-dashboard" variant="default" size="md">
+                  {t('viewPublicDashboard')}
                 </Button>
               </Group>
 
@@ -103,7 +159,7 @@ export function PublicHomePage() {
                 </Paper>
                 <Paper p="lg" className="metric-card">
                   <Text size="xs" tt="uppercase" c="dimmed" fw={700}>
-                    Últimos valores
+                    Ultimos valores
                   </Text>
                   <Title order={4} mt={6}>
                     {kpis ? kpis.latest_values.map((v) => `${v.year}:${v.value}`).join(' · ') : '...'}
@@ -143,6 +199,29 @@ export function PublicHomePage() {
       </SimpleGrid>
 
       {series ? <EmploymentLineChart series={series} /> : null}
+
+      <div id="public-dashboard">
+        <Stack gap="lg">
+          <DashboardEmbed
+            src={publicDashboardUrl}
+            title={t('viewPublicDashboard')}
+            description="Vista principal con el panel de tendencia anual del reto C."
+            minHeight="72vh"
+          />
+
+          <SimpleGrid cols={{ base: 1, xl: 2 }} spacing="lg">
+            {publicDashboardPanels.map((panel) => (
+              <DashboardEmbed
+                key={`${panel.title}-${panel.src}`}
+                src={panel.src}
+                title={panel.title}
+                description={panel.description}
+                minHeight={panel.minHeight}
+              />
+            ))}
+          </SimpleGrid>
+        </Stack>
+      </div>
 
       <ChatbotWidget />
     </>

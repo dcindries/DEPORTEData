@@ -105,6 +105,17 @@ a {
   background: linear-gradient(180deg, #f8fbfd 0%, #eef4f8 100%);
 }
 
+.embed-viewport {
+  width: 100%;
+}
+
+.embed-iframe {
+  display: block;
+  width: 100%;
+  min-height: inherit;
+  height: 100%;
+}
+
 .embed-toolbar {
   display: flex;
   align-items: center;
