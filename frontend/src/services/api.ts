@@ -24,6 +24,7 @@ export type LoginResponse = {
   token: string;
 };
 
+<<<<<<< codex/review-project-and-connect-backend-to-frontend-id6gqn
 type LegacyDashboardResponse = {
   kpis: {
     total_empleo_miles: number;
@@ -36,6 +37,8 @@ type LegacyDashboardResponse = {
   }>;
 };
 
+=======
+>>>>>>> main
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
 const normalizedBaseUrl = rawBaseUrl?.replace(/\/+$/, '');
 
@@ -115,6 +118,14 @@ export const chatApi = {
 export const authApi = {
   login: (username: string, password: string) =>
     requestJson<LoginResponse>(ENDPOINTS.login, {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+};
+
+export const authApi = {
+  login: (username: string, password: string) =>
+    requestJson<LoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     }),
