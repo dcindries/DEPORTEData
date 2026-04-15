@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Entrenamiento local QLoRA para Qwen2.5-3B-Instruct."""
+"""Entrenamiento local LoRA para Qwen en CPU o GPU (sin cuantización)."""
 
 from __future__ import annotations
 
@@ -8,11 +8,10 @@ from pathlib import Path
 
 import torch
 from datasets import load_dataset
-from peft import LoraConfig, prepare_model_for_kbit_training
+from peft import LoraConfig
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
     TrainingArguments,
 )
 from trl import SFTTrainer
@@ -29,8 +28,8 @@ DEFAULT_TARGET_MODULES = [
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Entrena Qwen2.5-3B-Instruct con QLoRA")
-    parser.add_argument("--model_name", default="Qwen/Qwen2.5-3B-Instruct")
+    parser = argparse.ArgumentParser(description="Entrena Qwen con LoRA sin cuantización")
+    parser.add_argument("--model_name", default="Qwen/Qwen2.5-1.5B-Instruct")
     parser.add_argument("--train_file", default="../data/train.jsonl")
     parser.add_argument("--val_file", default="../data/val.jsonl")
     parser.add_argument("--output_dir", default="../outputs")
@@ -60,23 +59,10 @@ def detect_linear_modules(model: AutoModelForCausalLM) -> set[str]:
     return linear_names
 
 
-def choose_optimizer() -> str:
-    try:
-        _ = TrainingArguments(output_dir="/tmp/opt-check", optim="paged_adamw_8bit")
-        return "paged_adamw_8bit"
-    except Exception:
-        return "adamw_torch"
-
-
 def main() -> int:
     args = build_parser().parse_args()
-
-    if not torch.cuda.is_available():
-        print(
-            "ERROR: No se detectó CUDA. QLoRA en 4-bit con bitsandbytes requiere GPU NVIDIA.\n"
-            "Sugerencia: ejecuta este script en una máquina con CUDA disponible."
-        )
-        return 1
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Dispositivo detectado: {device}")
 
     base_dir = Path(__file__).resolve().parent
     train_file = str(base_dir.joinpath(args.train_file).resolve())
@@ -88,20 +74,12 @@ def main() -> int:
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_use_double_quant=True,
-    )
-
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name,
-        quantization_config=bnb_config,
-        device_map="auto",
+        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
         trust_remote_code=True,
     )
-    model = prepare_model_for_kbit_training(model)
+    model.to(device)
     model.config.use_cache = False
 
     detected_modules = detect_linear_modules(model)
@@ -131,7 +109,7 @@ def main() -> int:
         target_modules=adjusted_targets,
     )
 
-    optim_name = choose_optimizer()
+    optim_name = "adamw_torch"
     print(f"Optimizador seleccionado: {optim_name}")
 
     training_args = TrainingArguments(
@@ -150,8 +128,9 @@ def main() -> int:
         evaluation_strategy="steps",
         save_strategy="steps",
         load_best_model_at_end=False,
-        bf16=True,
-        fp16=False,
+        bf16=False,
+        fp16=device == "cuda",
+        no_cuda=device != "cuda",
         optim=optim_name,
         report_to="none",
         gradient_checkpointing=True,
