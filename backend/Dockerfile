@@ -34,19 +34,19 @@ RUN mvn dependency:copy-dependencies -DoutputDirectory=/opt/spark/jars
 
 
 # Final image
-FROM builder AS deportedata-api
+FROM builder AS deportedata-backend
 
 ENV PATH="${SPARK_HOME}/bin:${SPARK_HOME}/sbin:${PATH}"
 
-RUN mkdir -p /opt/deportedata-api/app /opt/spark-apps
-WORKDIR /opt/deportedata-api
+RUN mkdir -p /opt/deportedata-backend/app /opt/spark-apps
+WORKDIR /opt/deportedata-backend
 
-COPY app/ /opt/deportedata-api/app/
+COPY app/ /opt/deportedata-backend/app/
 COPY spark-jobs/ /opt/spark-apps/
 
 EXPOSE 8000 8001
 
-COPY start-api.sh /start-api.sh
-RUN sed -i 's/\r$//g' /start-api.sh && chmod +x /start-api.sh
+COPY start-backend.sh /start-backend.sh
+RUN sed -i 's/\r$//g' /start-backend.sh && chmod +x /start-backend.sh
 
-CMD ["/bin/bash", "/start-api.sh"]
+CMD ["/bin/bash", "/start-backend.sh"]

@@ -1,12 +1,12 @@
 #!/bin/bash
 # ============================================================
-# deploy-api.sh — Despliega DEPORTEData API en EC2-5
+# deploy-backend.sh — Despliega DEPORTEData Backend en EC2-5
 #
 # REQUISITO: rellenar ~/backend/.env antes de ejecutar
 # ============================================================
 set -euo pipefail
 
-IMAGE_NAME="deportedata-api:latest"
+IMAGE_NAME="deportedata-backend:latest"
 ENV_FILE="${HOME}/backend/.env"
 
 # Verificar que .env existe
@@ -19,7 +19,7 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 
 echo "============================================"
-echo " Desplegando DEPORTEData API (EC2-5)"
+echo " Desplegando DEPORTEData Backend (EC2)"
 echo " Usando: $ENV_FILE"
 echo "============================================"
 
@@ -38,12 +38,12 @@ sudo docker build -t ${IMAGE_NAME} .
 
 # ─── 3) Eliminar contenedor anterior ───
 echo "[3/4] Eliminando contenedor anterior si existe..."
-sudo docker rm -f deportedata-api 2>/dev/null || true
+sudo docker rm -f deportedata-backend 2>/dev/null || true
 
 # ─── 4) Arrancar contenedor ───
 echo "[4/4] Arrancando contenedor..."
 sudo docker run -d \
-    --name deportedata-api \
+    --name deportedata-backend \
     --network host \
     --env-file ${ENV_FILE} \
     --restart unless-stopped \
@@ -54,5 +54,5 @@ echo "============================================"
 echo " API desplegada. Verificar:"
 echo "   curl http://localhost:8000/health"
 echo "   curl http://localhost:8001/internal/health"
-echo "   sudo docker logs deportedata-api"
+echo "   sudo docker logs deportedata-backend"
 echo "============================================"

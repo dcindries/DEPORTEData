@@ -12,13 +12,13 @@ class Settings(BaseSettings):
     nom_user_id: str = "proyecto_deportedata" 
 
     # Spark Master
-    spark_master_ip: str = "172.31.21.137"
+    spark_master_ip: str = "CAMBIAR_AQUI"
 
     # RDS MySQL
-    db_host: str = "localhost"
+    db_host: str = "CAMBIAR_AQUI"
     db_port: int = 3306
     db_user: str = "admin"
-    db_password: str = "changeme"
+    db_password: str = "CAMBIAR_AQUI"
     db_name: str = "deportedata"
 
     # S3
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     aws_region: str = "us-east-1"
 
     # Auth JWT
-    jwt_secret_key: str = "clave-secreta-cambiar-en-produccion"
+    jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
 

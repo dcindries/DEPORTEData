@@ -9,8 +9,8 @@ El ZIP funciona tal cual en cualquier EC2. El código no depende de puertos del 
 Tras descomprimir el ZIP en EC2-5:
 
 ```bash
-unzip deportedata-api.zip
-cd ~/deportedata-api
+unzip backend.zip
+cd ~/backend
 cp .env.example .env
 nano .env
 ```
@@ -39,7 +39,7 @@ nano .env
 ## 3. Desplegar
 
 ```bash
-bash ~/deportedata-api/deploy-api.sh
+bash ~/backend/deploy-backend.sh
 ```
 
 ---
@@ -63,9 +63,9 @@ Ambos deben devolver:
 
 ```
 1. Abrir puertos: 22, 80, 5000, 7077, 7000-7010, 8000, 8001, 8080, 3306, todo el tráfico (SG)
-2. unzip deportedata-api.zip
+2. unzip deportedata-backend.zip
 3. cp .env.example .env && nano .env  (rellenar valores)
-4. bash deploy-api.sh
+4. bash deploy-backend.sh
 5. curl http://localhost:8000/health
 ```
 
@@ -75,19 +75,19 @@ Ambos deben devolver:
 
 ```bash
 # Ver logs en tiempo real
-sudo docker logs -f deportedata-api
+sudo docker logs -f deportedata-backend
 
 # Reiniciar el contenedor
-sudo docker restart deportedata-api
+sudo docker restart deportedata-backend
 
 # Parar y eliminar
-sudo docker rm -f deportedata-api
+sudo docker rm -f deportedata-backend
 
 # Reconstruir (si cambias código)
-sudo docker rm -f deportedata-api
-cd ~/deportedata-api
-sudo docker build -t deportedata-api:latest .
-bash ~/deportedata-api/deploy-api.sh
+sudo docker rm -f deportedata-backend
+cd ~/deportedata-backend
+sudo docker build -t deportedata-backend:latest .
+bash ~/deportedata-backend/deploy-backend.sh
 ```
 
 ---
@@ -98,13 +98,13 @@ Las credenciales AWS caducan cada vez que reinicias el Lab:
 
 ```bash
 # 1) Actualizar las 3 líneas de AWS en el .env
-nano ~/deportedata-api/.env
+nano ~/deportedata-backend/.env
 
 # 2) Recrear el contenedor
-sudo docker rm -f deportedata-api
-bash ~/deportedata-api/deploy-api.sh
+sudo docker rm -f deportedata-backend
+bash ~/deportedata-backend/deploy-backend.sh
 ```
 
-Si además la IP pública de EC2-5 (backend-api) cambia, tendrás que reconectar por SSH con la nueva IP. La IP privada no cambia.
+Si además la IP pública de EC2-5 (backend) cambia, tendrás que reconectar por SSH con la nueva IP. La IP privada no cambia.
 
 ---
