@@ -22,48 +22,62 @@ import { type DashboardKpis, type DashboardSeries, dashboardApi } from '../../se
 
 const grafanaBaseUrl = appConfig.grafanaBaseUrl || '/api/grafana/d-solo/adp79lb/principal';
 const grafanaRange = 'orgId=1&from=1302878323442&to=1776263923442&timezone=browser&dtab=new-row';
-const publicDashboardUrl = appConfig.publicDashboardUrl || `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-1`;
+
+function buildGrafanaPanelUrl(panelId: string) {
+  if (appConfig.publicDashboardUrl) {
+    if (appConfig.publicDashboardUrl.includes('panelId=')) {
+      return appConfig.publicDashboardUrl.replace(/panelId=panel-\d+/, `panelId=${panelId}`);
+    }
+
+    const separator = appConfig.publicDashboardUrl.includes('?') ? '&' : '?';
+    return `${appConfig.publicDashboardUrl}${separator}panelId=${panelId}`;
+  }
+
+  return `${grafanaBaseUrl}?${grafanaRange}&panelId=${panelId}`;
+}
+
+const publicDashboardUrl = buildGrafanaPanelUrl('panel-1');
 const publicDashboardPanels = [
   {
     title: 'Evolucion anual total',
     description: 'Serie anual del empleo vinculado al deporte para contextualizar la tendencia general.',
-    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-1`,
+    src: buildGrafanaPanelUrl('panel-1'),
     minHeight: '420px',
   },
   {
     title: 'Evolucion trimestral total',
     description: 'Seguimiento trimestral para detectar aceleraciones, frenadas y cambios recientes.',
-    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-2`,
+    src: buildGrafanaPanelUrl('panel-2'),
     minHeight: '420px',
   },
   {
     title: 'Distribucion por sexo',
     description: 'Comparativa entre hombres y mujeres en el empleo deportivo agregado.',
-    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-3`,
+    src: buildGrafanaPanelUrl('panel-3'),
     minHeight: '360px',
   },
   {
     title: 'Tipo de empleo',
     description: 'Desglose entre empleo principal y secundario vinculado al deporte.',
-    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-4`,
+    src: buildGrafanaPanelUrl('panel-4'),
     minHeight: '360px',
   },
   {
     title: 'Distribucion por edad',
     description: 'Foto del ultimo periodo disponible por grupos de edad.',
-    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-5`,
+    src: buildGrafanaPanelUrl('panel-5'),
     minHeight: '360px',
   },
   {
     title: 'Distribucion por estudios',
     description: 'Comparativa del empleo deportivo segun nivel educativo.',
-    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-6`,
+    src: buildGrafanaPanelUrl('panel-6'),
     minHeight: '360px',
   },
   {
     title: 'Jornada y situacion profesional',
     description: 'Peso relativo del empleo asalariado, no asalariado y del tipo de jornada.',
-    src: `${grafanaBaseUrl}?${grafanaRange}&panelId=panel-7`,
+    src: buildGrafanaPanelUrl('panel-7'),
     minHeight: '360px',
   },
 ];
