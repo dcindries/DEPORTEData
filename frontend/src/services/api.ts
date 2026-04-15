@@ -24,6 +24,21 @@ export type LoginResponse = {
   token: string;
 };
 
+<<<<<<< codex/review-project-and-connect-backend-to-frontend-id6gqn
+type LegacyDashboardResponse = {
+  kpis: {
+    total_empleo_miles: number;
+    variacion_anual_pct: number;
+    ratio_hombres_mujeres: number;
+  };
+  empleo_trimestral: Array<{
+    periodo: string;
+    valor: number;
+  }>;
+};
+
+=======
+>>>>>>> main
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
 const normalizedBaseUrl = rawBaseUrl?.replace(/\/+$/, '');
 
@@ -32,6 +47,12 @@ const DEFAULT_API_BASE_URL = '/api';
 const baseUrl = normalizedBaseUrl && /^https?:\/\//.test(normalizedBaseUrl)
   ? normalizedBaseUrl
   : DEFAULT_API_BASE_URL;
+
+const ENDPOINTS = {
+  login: (import.meta.env.VITE_API_LOGIN_PATH as string | undefined) ?? '/login',
+  chat: (import.meta.env.VITE_API_CHAT_PATH as string | undefined) ?? '/getResponseChat',
+  dashboard: (import.meta.env.VITE_API_DASHBOARD_PATH as string | undefined) ?? '/getDatosDashboard',
+};
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const method = init?.method?.toUpperCase() ?? 'GET';
@@ -53,16 +74,52 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+let dashboardCache: Promise<LegacyDashboardResponse> | null = null;
+
+function getLegacyDashboard(): Promise<LegacyDashboardResponse> {
+  if (!dashboardCache) {
+    dashboardCache = requestJson<LegacyDashboardResponse>(ENDPOINTS.dashboard);
+  }
+  return dashboardCache;
+}
+
+function mapLegacySeries(response: LegacyDashboardResponse): DashboardSeries {
+  return response.empleo_trimestral.map((item) => ({
+    year: Number(item.periodo.toString().slice(0, 4)) || 0,
+    value: Number(item.valor),
+  }));
+}
+
+function mapLegacyKpis(response: LegacyDashboardResponse): DashboardKpis {
+  const latestValues = mapLegacySeries(response).slice(-5);
+  const latestYear = latestValues[latestValues.length - 1]?.year ?? new Date().getFullYear();
+
+  return {
+    empleo_total: Number(response.kpis.total_empleo_miles),
+    growth_pct: Number(response.kpis.variacion_anual_pct),
+    latest_year: latestYear,
+    latest_values: latestValues,
+  };
+}
+
 export const dashboardApi = {
-  getKpis: () => requestJson<DashboardKpis>('/dashboard/kpis'),
-  getSeries: () => requestJson<DashboardSeries>('/dashboard/series'),
+  getKpis: async () => mapLegacyKpis(await getLegacyDashboard()),
+  getSeries: async () => mapLegacySeries(await getLegacyDashboard()),
 };
 
 export const chatApi = {
   sendMessage: (message: string) =>
-    requestJson<ChatResponse>('/chat', {
+    requestJson<{ question: string; answer: string }>(ENDPOINTS.chat, {
       method: 'POST',
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ question: message }),
+    }).then((response) => ({ message: response.question, answer: response.answer })),
+};
+
+export const authApi = {
+  login: (username: string, password: string) =>
+    requestJson<LoginResponse>(ENDPOINTS.login, {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
     }),
 };
 
