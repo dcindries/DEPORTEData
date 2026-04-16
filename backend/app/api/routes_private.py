@@ -24,10 +24,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["private"])
 
 
-# ──────────────────────────────────────────────
 # Spark Submit helper
-# ──────────────────────────────────────────────
-
 def _spark_submit(job_file: str, timeout: int = 600) -> dict:
     """
     Ejecuta spark-submit contra el master remoto.

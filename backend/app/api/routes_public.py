@@ -29,16 +29,13 @@ TEST_USER = {
     "admin": {
         "name": "Administrador",
         "username": "admin",
-        "password": "*admin1234",
+        "password": "*admin1234_prueba",
         "role": "admin",
     }
 }
 
 
-# ══════════════════════════════════════════════
 # Endpoints frontend
-# ══════════════════════════════════════════════
-
 @router.get("/health")
 def health_check():
     s = get_settings()
