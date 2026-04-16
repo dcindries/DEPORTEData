@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(function (_a) {
     var mode = _a.mode;
     var env = loadEnv(mode, '.', '');
-    var devApiTarget = env.VITE_DEV_API_TARGET || 'http://localhost:8000';
+    var devApiTarget = env.BACKEND_PUBLIC_IP ? `http://${env.BACKEND_PUBLIC_IP}:8000` : 'http://localhost:8000';
     return {
         plugins: [react()],
         server: {

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-envsubst '${BACKEND_PRIVATE_IP}' \
+envsubst '${BACKEND_PUBLIC_IP}' \
   < /etc/nginx/conf.d/default.conf \
   > /tmp/default.conf
 mv /tmp/default.conf /etc/nginx/conf.d/default.conf
