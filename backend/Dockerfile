@@ -2,8 +2,10 @@ FROM eclipse-temurin:17-jdk-jammy AS builder
 
 # Paquetes de sistema
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates curl wget unzip git maven openssh-client && \
+RUN apt-get update -o Acquire::Retries=5 && \
+    apt-get install -y --no-install-recommends --fix-missing \
+      ca-certificates curl wget unzip git maven openssh-client \
+      python3 python3-pip python3-numpy python3-scipy python3-pandas && \
     rm -rf /var/lib/apt/lists/* && \
     update-alternatives --install "/usr/bin/python" "python" "$(which python3)" 1
 

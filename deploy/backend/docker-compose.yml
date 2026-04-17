@@ -1,4 +1,3 @@
-# =====================================================================
 # DEPORTEData — docker-compose.yml
 #
 # Despliega el backend desde GHCR.
@@ -10,9 +9,6 @@
 #   - ia-service  (FastAPI: moderador + RAG + Ollama, red interna)
 #   - backend     (FastAPI pública/privada, expuesto al host)
 #
-# Solo el backend publica puertos al host. El resto viajan por la red
-# bridge del compose (service discovery por nombre de servicio).
-#
 # Uso (primer arranque, desde ~/ec2-5):
 #     cp .env.example .env
 #     nano .env                    # rellenar secretos (DB, JWT, etc)
@@ -20,11 +16,10 @@
 #     docker compose up -d
 #     docker exec -it deportedata-ollama ollama pull ${OLLAMA_MODEL}
 #     docker exec -it deportedata-ia python -m app.ingest_chromadb
-# =====================================================================
 
 services:
 
-  # ─── Ollama (LLM) ─────────────────────────────────────────────────
+  # Ollama (LLM)
   ollama:
     image: ollama/ollama:0.5.7
     container_name: deportedata-ollama
@@ -40,7 +35,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # ─── ChromaDB ─────────────────────────────────────────────────────
+  # ChromaDB
   chromadb:
     image: chromadb/chroma:0.5.23
     container_name: deportedata-chromadb
@@ -56,7 +51,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # ─── IA Service (moderador + RAG + Ollama) ────────────────────────
+  # IA Service (moderador + RAG + Ollama)
   ia-service:
     image: ghcr.io/${GHCR_USER}/deportedata/ia-service:${IA_SERVICE_IMAGE_TAG:-latest}
     container_name: deportedata-ia
@@ -81,7 +76,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # ─── Backend (FastAPI pública + privada) ──────────────────────────
+  # Backend (FastAPI pública + privada)
   backend:
     image: ghcr.io/${GHCR_USER}/deportedata/backend:${BACKEND_IMAGE_TAG:-latest}
     container_name: deportedata-backend
