@@ -26,6 +26,7 @@ import sys
 from typing import List
 
 import chromadb
+from chromadb.utils import embedding_functions
 from chromadb.config import Settings as ChromaSettings
 
 from app.config import get_settings
@@ -81,8 +82,16 @@ def main() -> int:
         logger.info("Colección previa eliminada: %s", settings.chroma_collection)
     except Exception:
         pass
-
-    coll = client.create_collection(name=settings.chroma_collection)
+    
+    embed_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="paraphrase-multilingual-MiniLM-L12-v2"
+    )
+    
+    coll = client.create_collection(
+        name=settings.chroma_collection,
+        embedding_function=embed_fn,
+        metadata={"hnsw:space": "cosine"},
+    )
 
     # Batcheamos por rendimiento
     BATCH = 200

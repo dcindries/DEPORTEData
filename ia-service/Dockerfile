@@ -22,7 +22,8 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Pre-descarga del modelo multilingüe de Detoxify (~1.1 GB).
 # Así evitamos que el primer arranque en EC2 tenga que descargarlo.
-RUN python -c "from detoxify import Detoxify; Detoxify('multilingual')"
+RUN python -c "from sentence_transformers import SentenceTransformer; \
+               SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')"
 
 # Copiamos el código al final para aprovechar la cache
 COPY app /app/app
