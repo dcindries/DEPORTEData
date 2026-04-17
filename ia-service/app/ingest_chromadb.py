@@ -82,11 +82,11 @@ def main() -> int:
         logger.info("Colección previa eliminada: %s", settings.chroma_collection)
     except Exception:
         pass
-    
+
     embed_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
         model_name="paraphrase-multilingual-MiniLM-L12-v2"
     )
-    
+
     coll = client.create_collection(
         name=settings.chroma_collection,
         embedding_function=embed_fn,
