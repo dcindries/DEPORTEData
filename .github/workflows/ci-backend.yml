@@ -46,5 +46,8 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # scope=backend hace que TODOS los tags backend_* compartan la misma
+          # caché. Sin esto, cada tag es un scope distinto y cada build empieza
+          # desde cero (por eso tardaba ~6-8 min en lugar de ~1-2).
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
