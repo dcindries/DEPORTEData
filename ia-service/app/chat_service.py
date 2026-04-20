@@ -98,7 +98,7 @@ class ChatService:
         )
 
     # RAG
-    def _retrieve(self, query: str, k: int = 3) -> str:    # ← k=5 → k=3
+    def _retrieve(self, query: str, k: int = 3) -> str:  # <- k=5 -> k=3
         try:
             collection = self._get_collection()
             res = collection.query(query_texts=[query], n_results=k)
@@ -108,11 +108,11 @@ class ChatService:
             return ""
         if not docs:
             return ""
-        
+
         # Truncar cada chunk a 600 chars y limitar el total
         chunks = [d[:600] for d in docs]
         context = "\n\n--- Fragmento ---\n".join(chunks)
-        return context[:3000]   # ← límite 3000 chars
+        return context[:3000]  # ← límite 3000 chars
 
     # LLM
     async def _generate(self, message: str, context: str) -> str:
@@ -132,9 +132,9 @@ class ChatService:
             "stream": False,
             "options": {
                 "temperature": self._settings.ollama_temperature,
-                "num_predict": 350,        # máx 350 tokens generados (~250 palabras)
-                "num_ctx": 3072,           # ventana suficiente para 5 chunks + respuesta
-                "num_thread": 2,           # usa los 2 vCPU de t3.large (no 1 por defecto)
+                "num_predict": 350,  # máx 350 tokens generados (~250 palabras)
+                "num_ctx": 3072,  # ventana suficiente para 5 chunks + respuesta
+                "num_thread": 2,  # usa los 2 vCPU de t3.large (no 1 por defecto)
             },
         }
         url = f"{self._settings.ollama_url}/api/chat"
