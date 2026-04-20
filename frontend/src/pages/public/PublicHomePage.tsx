@@ -40,7 +40,6 @@ export function PublicHomePage() {
   const { t } = useTranslation();
   const [kpis, setKpis] = useState<DashboardKpis | null>(null);
   const [, setSeries] = useState<DashboardSeries | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     void usageApi.track('public_page_view', '/', { section: 'home' });
@@ -54,8 +53,7 @@ export function PublicHomePage() {
         setKpis(kpisResponse);
         setSeries(seriesResponse);
       } catch (err) {
-        const details = err instanceof Error ? err.message : t('unknownError');
-        setError(`${t('dashboardLoadError')} ${details}`);
+        setKpis(null);
       }
     };
 
@@ -202,14 +200,6 @@ export function PublicHomePage() {
           );
         })}
       </SimpleGrid>
-
-      {error ? (
-        <Paper p="md" mb="lg" radius="lg" className="glass-card">
-          <Text size="sm" c="dimmed">
-            {t('liveIndicatorsUnavailable')}
-          </Text>
-        </Paper>
-      ) : null}
 
       <div id="public-dashboard">
         <Stack gap="lg">
