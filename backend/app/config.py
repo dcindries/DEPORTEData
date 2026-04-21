@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     # Spark Master
     spark_master_ip: str = "CAMBIAR_AQUI"
+    spark_driver_host: str = "CAMBIAR_AQUI"
 
     # RDS MySQL
     db_host: str = "CAMBIAR_AQUI"

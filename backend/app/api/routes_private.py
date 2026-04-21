@@ -62,17 +62,7 @@ VALID_CURATION_DATASETS = {
 
 
 def _aws_s3a_confs() -> list:
-    """Config Spark-S3A con credenciales temporales del Learner Lab.
-
-    Lee las 3 variables AWS_* del entorno del backend (.env) y las pasa como
-    `--conf spark.hadoop.fs.s3a.*` para que los executors en los workers
-    remotos puedan autenticarse contra S3 sin necesidad de tener las env
-    vars configuradas en sus contenedores.
-
-    Se usa `TemporaryAWSCredentialsProvider` porque las credenciales del
-    Learner Lab son STS (incluyen session_token); con el provider chain
-    por defecto a veces falla al no encontrar el token.
-    """
+    """Config Spark-S3A con credenciales temporales del Learner Lab."""
     access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
     secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
     session    = os.environ.get("AWS_SESSION_TOKEN", "")
@@ -95,6 +85,40 @@ def _aws_s3a_confs() -> list:
         "--conf", f"spark.hadoop.fs.s3a.access.key={access_key}",
         "--conf", f"spark.hadoop.fs.s3a.secret.key={secret_key}",
         "--conf", f"spark.hadoop.fs.s3a.session.token={session}",
+    ]
+
+
+def _spark_driver_confs() -> list:
+    """Config de red del driver Spark en modo client desde un contenedor Docker
+    en red bridge.
+
+    El driver corre dentro del contenedor del backend y debe anunciarse a los
+    executors con la IP del host (EC2-backend), no con el hostname interno de Docker.
+
+    Los puertos se fijan para poder publicarlos en docker-compose.yml y
+    abrirlos en el Security Group de EC2-backend.
+    """
+    s = get_settings()
+    host = s.spark_driver_host
+    if not host or host == "CAMBIAR_AQUI":
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "spark_driver_host no configurado. Añade "
+                "SPARK_DRIVER_HOST=<ip-privada-EC2-5> al .env y recrea el "
+                "contenedor (docker compose up -d --force-recreate backend)."
+            ),
+        )
+    return [
+        # bindAddress: el driver escucha en todas las interfaces del contenedor
+        "--conf", "spark.driver.bindAddress=0.0.0.0",
+        # host: dirección que los executors usarán para conectar al driver
+        "--conf", f"spark.driver.host={host}",
+        # Puertos fijos, publicados en docker-compose.yml y abiertos en SG
+        "--conf", "spark.driver.port=7078",
+        "--conf", "spark.driver.blockManager.port=7079",
+        "--conf", "spark.blockManager.port=7079",
+        "--conf", "spark.ui.port=4040",
     ]
 
 
@@ -122,6 +146,8 @@ def _spark_submit(
         "--master", s.spark_master_url,
         "--deploy-mode", "client",
     ]
+    # Configuración de red del driver (siempre que haya ejecución distribuida)
+    cmd.extend(_spark_driver_confs())
     if needs_s3:
         cmd.extend(_aws_s3a_confs())
     cmd.append(path)
@@ -193,9 +219,8 @@ def job_analytics():
 
 @router.post("/internal/jobs/test")
 def job_test():
-    """Job Test — Calcula Pi para verificar conexión al clúster Spark."""
-    # Este job no toca S3, así que no necesita credenciales.
-    return {"job": "test", **_spark_submit("job_test.py", timeout=120, needs_s3=False)}
+    """Job Test - Calcula Pi para verificar conexión al clúster Spark."""
+    return {"job": "test", **_spark_submit("job_test.py", timeout=300, needs_s3=False)}
 
 
 @router.post("/internal/upload/csv")

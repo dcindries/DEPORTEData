@@ -87,6 +87,8 @@ services:
     ports:
       - "8000:8000"   # API pública (frontend)
       - "8001:8001"   # API privada (admin)
+      - "7078:7078"
+      - "7079:7079"
     depends_on:
       ia-service:
         condition: service_healthy
