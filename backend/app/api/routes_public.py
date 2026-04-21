@@ -133,7 +133,7 @@ def auth_login(request: LoginRequest, http_request: Request):
     }
 
 
-# ─── /chat: proxy estricto al ia-service ─────────────────────────────
+# /chat: proxy estricto al ia-service
 @router.post("/chat")
 def chat(request: ChatRequest, http_request: Request):
     """
@@ -188,14 +188,14 @@ def chat(request: ChatRequest, http_request: Request):
     }
 
 
-@router.get("/dashboard/kpis")
-def get_dashboard_kpis(data_service: DataService = Depends(get_data_service)):
-    return data_service.dashboard_kpis()
+#@router.get("/dashboard/kpis")
+#def get_dashboard_kpis(data_service: DataService = Depends(get_data_service)):
+#    return data_service.dashboard_kpis()
 
 
-@router.get("/dashboard/series")
-def get_dashboard_series(data_service: DataService = Depends(get_data_service)):
-    return data_service.dashboard_series()
+#@router.get("/dashboard/series")
+#def get_dashboard_series(data_service: DataService = Depends(get_data_service)):
+#    return data_service.dashboard_series()
 
 
 @router.post("/usage/events", status_code=204)
