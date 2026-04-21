@@ -1,11 +1,17 @@
 """
-Job 1: CSVs en raw/ -> curated/ (tipo parquet).
+Job 1: UN CSV en raw/ -> curated/ (parquet particionado).
+
+Uso:
+    spark-submit job1_curation.py <nombre_dataset>
+
+Ejemplo:
+    spark-submit job1_curation.py trimestral_jornada_laboral
 
 Estructura de salida:
     curated/dataset=<nombre>/anio=YYYY/part-*.parquet
 
-Los 7 datasets procesados tienen schemas heterogéneos; este job los unifica
-a un schema canónico con NULL en las columnas de dimensión que no aplican.
+Los 7 datasets tienen schemas heterogéneos; este job los unifica a un schema
+canónico con NULL en las columnas de dimensión que no aplican.
 
 Resultado (tipo parquet) de salida:
     dataset              string    (PARTITION KEY)
@@ -94,7 +100,7 @@ def process_dataset(spark, name: str, frecuencia: str) -> int:
     for col_name in ALL_DIM_COLS:
         if col_name not in df.columns:
             df = df.withColumn(col_name, F.lit(None).cast("string"))
-    
+
     canonical = [
         "dataset", "anio",
         "frecuencia", "trimestre", "periodo_raw",
@@ -104,6 +110,9 @@ def process_dataset(spark, name: str, frecuencia: str) -> int:
     ]
     df = df.select(*canonical)
 
+    # Cache para evitar releer el CSV en los 2 counts + el write
+    df.cache()
+
     # Descartar filas cuyo periodo no haya parseado
     total  = df.count()
     df_ok  = df.filter(F.col("anio").isNotNull())
@@ -112,23 +121,41 @@ def process_dataset(spark, name: str, frecuencia: str) -> int:
         print(f"[job1]   aviso: {total - n_ok} filas descartadas (periodo no parseable)")
 
     (df_ok
-        .repartition("dataset", "anio")
+        .repartition("anio")
         .write
         .mode("overwrite")
         .partitionBy("dataset", "anio")
         .option("compression", "snappy")
         .parquet(CURATED))
 
+    df.unpersist()
+
     print(f"[job1]   OK  {name}: {n_ok} filas -> {CURATED}/dataset={name}/")
     return n_ok
 
 
 def main():
+    # Leer dataset a procesar desde argv
+    if len(sys.argv) < 2:
+        print("[job1] ERROR: falta el nombre del dataset como argumento", file=sys.stderr)
+        print(f"[job1] Uso: spark-submit job1_curation.py <dataset>", file=sys.stderr)
+        print(f"[job1] Datasets válidos: {', '.join(sorted(DATASETS.keys()))}", file=sys.stderr)
+        sys.exit(2)
+
+    dataset_name = sys.argv[1].strip()
+
+    if dataset_name not in DATASETS:
+        print(f"[job1] ERROR: dataset '{dataset_name}' no existe", file=sys.stderr)
+        print(f"[job1] Datasets válidos: {', '.join(sorted(DATASETS.keys()))}", file=sys.stderr)
+        sys.exit(2)
+
+    frecuencia, _dims = DATASETS[dataset_name]
+
     spark = (
         SparkSession.builder
-        .appName("DEPORTEData_Job1_Curation")
-        # Fundamental: overwrite dinámico para no borrar particiones
-        # de datasets ya existentes al re-ejecutar.
+        .appName(f"DEPORTEData_Job1_Curation_{dataset_name}")
+        # Fundamental: overwrite dinámico para NO borrar particiones
+        # de otros datasets al reescribir sólo éste.
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
         .getOrCreate()
     )
@@ -136,24 +163,19 @@ def main():
     print(f"[job1] Spark {spark.version} — master: {spark.sparkContext.master}")
     print(f"[job1] RAW     = {RAW}")
     print(f"[job1] CURATED = {CURATED}")
+    print(f"[job1] DATASET = {dataset_name} (frecuencia={frecuencia})")
 
-    total_rows = 0
-    errors = []
-    for name, (frec, _dims) in DATASETS.items():
-        try:
-            total_rows += process_dataset(spark, name, frec)
-        except Exception as e:
-            print(f"[job1]   ERROR en {name}: {e}", file=sys.stderr)
-            errors.append((name, str(e)))
-
-    print(f"\n[job1] TOTAL filas curadas: {total_rows}")
-    print(f"[job1] Datasets con error:  {len(errors)}")
-    for name, msg in errors:
-        print(f"  - {name}: {msg}")
+    try:
+        n = process_dataset(spark, dataset_name, frecuencia)
+        print(f"\n[job1] OK — {dataset_name}: {n} filas curadas")
+    except Exception as e:
+        print(f"[job1] ERROR en {dataset_name}: {e}", file=sys.stderr)
+        spark.stop()
+        sys.exit(1)
 
     spark.stop()
-    sys.exit(1 if errors else 0)
 
 
 if __name__ == "__main__":
     main()
+    

@@ -3,7 +3,7 @@ API Privada (:8001) — Administración, Spark jobs, subida S3, gestión BD.
 
 Endpoints:
   - GET  /internal/health                    → estado
-  - POST /internal/jobs/curation             → Job 1: limpieza CSV → Parquet
+  - POST /internal/jobs/curation             → Job 1: limpieza CSV → Parquet (un dataset)
   - POST /internal/jobs/analytics            → Job 2: analítica + forecast
   - POST /internal/jobs/test                 → Job Test: Pi (verificar cluster)
   - POST /internal/upload/csv                → subir CSV a S3
@@ -20,6 +20,7 @@ import os
 import re
 import subprocess
 import logging
+from typing import Optional
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 
 from app.config import get_settings
@@ -47,9 +48,29 @@ def _validate_identifier(name: str, kind: str) -> str:
     return name
 
 
+# Whitelist de datasets válidos para el job1 de curación.
+# Debe estar sincronizado con DATASETS en spark-jobs/job1_curation.py
+VALID_CURATION_DATASETS = {
+    "trimestral_jornada_laboral",
+    "trimestral_perfil_demografico",
+    "anual_mm_jornada",
+    "anual_mm_perfil",
+    "medias_anuales_demografia",
+    "medias_anuales_jornada_sexo",
+    "medias_anuales_tipo_empleo",
+}
+
+
 # Spark Submit helper
-def _spark_submit(job_file: str, timeout: int = 600) -> dict:
-    """Ejecuta spark-submit contra el master remoto."""
+def _spark_submit(
+    job_file: str,
+    job_args: Optional[list] = None,
+    timeout: int = 600,
+) -> dict:
+    """Ejecuta spark-submit contra el master remoto.
+
+    job_args: argumentos posicionales que se pasan al script (después del path).
+    """
     s = get_settings()
     path = f"/opt/spark-apps/{job_file}"
 
@@ -65,6 +86,8 @@ def _spark_submit(job_file: str, timeout: int = 600) -> dict:
                   "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
         path,
     ]
+    if job_args:
+        cmd.extend(str(a) for a in job_args)
 
     logger.info(f"spark-submit: {' '.join(cmd)}")
 
@@ -88,9 +111,31 @@ def health():
 
 
 @router.post("/internal/jobs/curation")
-def job_curation():
-    """Job 1 — Curación: CSVs raw → Parquet limpio en S3."""
-    return {"job": "curation", **_spark_submit("job1_curation.py")}
+def job_curation(
+    dataset: str = Query(
+        ...,
+        description=(
+            "Nombre del CSV en raw/ a curar (sin extensión). "
+            "Opciones: trimestral_jornada_laboral, trimestral_perfil_demografico, "
+            "anual_mm_jornada, anual_mm_perfil, medias_anuales_demografia, "
+            "medias_anuales_jornada_sexo, medias_anuales_tipo_empleo"
+        ),
+    ),
+):
+    """Job 1 — Curación: un CSV de raw/ → Parquet particionado en curated/."""
+    if dataset not in VALID_CURATION_DATASETS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": f"Dataset '{dataset}' no válido.",
+                "valid_options": sorted(VALID_CURATION_DATASETS),
+            },
+        )
+    return {
+        "job": "curation",
+        "dataset": dataset,
+        **_spark_submit("job1_curation.py", job_args=[dataset]),
+    }
 
 
 @router.post("/internal/jobs/analytics")
