@@ -61,15 +61,55 @@ VALID_CURATION_DATASETS = {
 }
 
 
+def _aws_s3a_confs() -> list:
+    """Config Spark-S3A con credenciales temporales del Learner Lab.
+
+    Lee las 3 variables AWS_* del entorno del backend (.env) y las pasa como
+    `--conf spark.hadoop.fs.s3a.*` para que los executors en los workers
+    remotos puedan autenticarse contra S3 sin necesidad de tener las env
+    vars configuradas en sus contenedores.
+
+    Se usa `TemporaryAWSCredentialsProvider` porque las credenciales del
+    Learner Lab son STS (incluyen session_token); con el provider chain
+    por defecto a veces falla al no encontrar el token.
+    """
+    access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
+    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+    session    = os.environ.get("AWS_SESSION_TOKEN", "")
+
+    if not (access_key and secret_key and session):
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Faltan credenciales AWS en el entorno del backend. "
+                "Actualiza AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY y "
+                "AWS_SESSION_TOKEN en el .env y recrea el contenedor "
+                "(docker compose up -d --force-recreate backend)."
+            ),
+        )
+
+    return [
+        "--conf", "spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem",
+        "--conf", "spark.hadoop.fs.s3a.aws.credentials.provider="
+                  "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
+        "--conf", f"spark.hadoop.fs.s3a.access.key={access_key}",
+        "--conf", f"spark.hadoop.fs.s3a.secret.key={secret_key}",
+        "--conf", f"spark.hadoop.fs.s3a.session.token={session}",
+    ]
+
+
 # Spark Submit helper
 def _spark_submit(
     job_file: str,
     job_args: Optional[list] = None,
     timeout: int = 600,
+    needs_s3: bool = True,
 ) -> dict:
     """Ejecuta spark-submit contra el master remoto.
 
-    job_args: argumentos posicionales que se pasan al script (después del path).
+    job_args:  argumentos posicionales que se pasan al script Python.
+    needs_s3:  si True (por defecto), inyecta credenciales AWS como --conf.
+               Ponerlo a False para jobs puramente de cómputo (ej. job_test).
     """
     s = get_settings()
     path = f"/opt/spark-apps/{job_file}"
@@ -81,15 +121,22 @@ def _spark_submit(
         "spark-submit",
         "--master", s.spark_master_url,
         "--deploy-mode", "client",
-        "--conf", "spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem",
-        "--conf", "spark.hadoop.fs.s3a.aws.credentials.provider="
-                  "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
-        path,
     ]
+    if needs_s3:
+        cmd.extend(_aws_s3a_confs())
+    cmd.append(path)
     if job_args:
         cmd.extend(str(a) for a in job_args)
 
-    logger.info(f"spark-submit: {' '.join(cmd)}")
+    # Log sin credenciales (no volcar las claves AWS a los logs)
+    safe_cmd = [
+        ("***" if (c.startswith("spark.hadoop.fs.s3a.access.key=")
+                   or c.startswith("spark.hadoop.fs.s3a.secret.key=")
+                   or c.startswith("spark.hadoop.fs.s3a.session.token="))
+         else c)
+        for c in cmd
+    ]
+    logger.info(f"spark-submit: {' '.join(safe_cmd)}")
 
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
@@ -147,7 +194,8 @@ def job_analytics():
 @router.post("/internal/jobs/test")
 def job_test():
     """Job Test — Calcula Pi para verificar conexión al clúster Spark."""
-    return {"job": "test", **_spark_submit("job_test.py", timeout=120)}
+    # Este job no toca S3, así que no necesita credenciales.
+    return {"job": "test", **_spark_submit("job_test.py", timeout=120, needs_s3=False)}
 
 
 @router.post("/internal/upload/csv")
