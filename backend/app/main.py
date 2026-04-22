@@ -1,8 +1,7 @@
-# DEPORTEData API — Punto de entrada.
-
+# DEPORTEData API
 # Levanta DOS servidores FastAPI:
-#   - API Pública  (:8000) → Frontend, login, chat, dashboard, datos
-#   - API Privada  (:8001) → Spark jobs, admin S3/RDS
+#   - API Pública  (:8000) -> Frontend, login, chat, dashboard, datos
+#   - API Privada  (:8001) -> Spark jobs, admin S3/RDS
 # Uso:
 #   python -m app.main
 
@@ -16,6 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.api.routes_public import router as public_router
 from app.api.routes_private import router as private_router
+from app.api.routes_analytics import private_router as analytics_private_router
+from app.api.routes_analytics import public_router as analytics_public_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,6 +40,7 @@ public_app.add_middleware(
 )
 
 public_app.include_router(public_router)
+public_app.include_router(analytics_public_router)
 
 
 # App privada (:8001)
@@ -49,6 +51,7 @@ private_app = FastAPI(
 )
 
 private_app.include_router(private_router)
+private_app.include_router(analytics_private_router)
 
 
 # Arranque dual
@@ -82,7 +85,6 @@ async def main():
         server_public.serve(),
         server_private.serve(),
     )
-
 
 if __name__ == "__main__":
     asyncio.run(main())

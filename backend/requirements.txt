@@ -2,6 +2,7 @@ pyspark==3.5.5
 boto3
 mysql-connector-python
 pandas
+pyarrow>=14
 numpy
 scipy
 fastapi>=0.110
