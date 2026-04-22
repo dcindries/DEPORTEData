@@ -49,7 +49,9 @@ def _sanitize_metadata(meta: dict, default_fuente: str) -> dict:
     return out
 
 
-def _iter_chunks_legacy(data: dict, default_fuente: str) -> Iterable[Tuple[str, str, dict]]:
+def _iter_chunks_legacy(
+    data: dict, default_fuente: str
+) -> Iterable[Tuple[str, str, dict]]:
     """Formato A: {chunks: [{chunk_id, texto, fuente}, ...]}"""
     for chunk in data.get("chunks", []):
         cid = chunk.get("chunk_id")
@@ -60,7 +62,9 @@ def _iter_chunks_legacy(data: dict, default_fuente: str) -> Iterable[Tuple[str, 
         yield cid, texto, meta
 
 
-def _iter_chunks_native(data: dict, default_fuente: str) -> Iterable[Tuple[str, str, dict]]:
+def _iter_chunks_native(
+    data: dict, default_fuente: str
+) -> Iterable[Tuple[str, str, dict]]:
     """Formato B: {ids: [...], documents: [...], metadatas: [...]}"""
     ids = data.get("ids", []) or []
     docs = data.get("documents", []) or []
@@ -69,7 +73,8 @@ def _iter_chunks_native(data: dict, default_fuente: str) -> Iterable[Tuple[str, 
     if len(ids) != len(docs):
         logger.warning(
             "Longitudes inconsistentes ids=%s documents=%s en fichero — se ignora",
-            len(ids), len(docs),
+            len(ids),
+            len(docs),
         )
         return
 
@@ -184,7 +189,9 @@ def main() -> int:
         for cid, texto, meta in _iter_file(path):
             # Evitar IDs duplicados entre ficheros distintos (Chroma da error)
             if cid in seen_ids:
-                logger.warning("ID duplicado ignorado: %s (en %s)", cid, os.path.basename(path))
+                logger.warning(
+                    "ID duplicado ignorado: %s (en %s)", cid, os.path.basename(path)
+                )
                 continue
             seen_ids.add(cid)
 
