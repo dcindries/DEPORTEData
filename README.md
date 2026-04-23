@@ -19,39 +19,42 @@
 /
 ├── .github/
 │   └── workflows/
-│       ├── ci-data-ia.yml        # Workflow exclusivo de Data/IA
+│       ├── ci-ia-service.yml     # Workflow exclusivo de Data/IA
 │       ├── ci-frontend.yml       # Workflow exclusivo de Frontend
-│       ├── ci-backend.yml        # Workflow exclusivo de Backend
-│       └── ci-deploy.yml         # Workflow exclusivo de Deploy
+│       └── ci-backend.yml        # Workflow exclusivo de Backend
 │
-├── data-ia/
-│   ├── Dockerfile
-│   ├── .env.example
-│   ├── src/
-│   ├── tests/
-│   └── README.md                 # Documentación específica del módulo
+├── api/                  # funciones de Vercel
+├── data-ia/              # pruebas de entrenamiento de modelo
+├── deporte-qwen-train/   # pruebas de entrenamiento de modelo
 │
 ├── frontend/
 │   ├── Dockerfile
 │   ├── .env.example
-│   ├── src/
-│   ├── tests/
-│   └── README.md
+│   └── src/
 │
 ├── backend/
+│   ├── app/
+│   ├── spark-jobs/
+│   ├── Dockerfile
+│   ├── .env.example  # el 
+│   └── guia_xxxx.md
+│
+├── ia-service/   
+│   ├── app/
+│   ├── requirements.txt
 │   ├── Dockerfile
 │   ├── .env.example
-│   ├── src/
-│   ├── tests/
-│   └── README.md
+│   └── build-and-push.sh
 │
-├── deploy/
-│   ├── docker-compose.yml        # Orquestación de todos los servicios
-│   ├── docker-compose.dev.yml    # Override para desarrollo/testing
-│   ├── .env.example
-│   ├── nginx/
-│   ├── scripts/
-│   └── README.md
+├── deploy/   # para despliegue en EC2 mediante docker-compose
+│   ├── frontend/  # EC2 ( [web react] )
+│   │   ├── docker-compose.yml 
+│   │   └── .env.example
+│   │
+│   └── backend/   # EC2 ( [API] y [model_ia + chrmomadb] )
+│       ├── data_json/            # archivos *.json para ingesta de chromadb
+│       ├── docker-compose.yml
+│       └── .env.example
 │
 ├── .gitignore
 └── README.md                     # ← Este archivo
