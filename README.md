@@ -19,9 +19,9 @@
 /
 ├── .github/
 │   └── workflows/
-│       ├── ci-ia-service.yml     # Workflow exclusivo de Data/IA
-│       ├── ci-frontend.yml       # Workflow exclusivo de Frontend
-│       └── ci-backend.yml        # Workflow exclusivo de Backend
+│       ├── ci-ia-service.yml     # Workflow exclusivo de "ia-service" -> tag "ia-service_vX.X.X"
+│       ├── ci-frontend.yml       # Workflow exclusivo de "frontend"   -> tag "frontend_vX.X.X"
+│       └── ci-backend.yml        # Workflow exclusivo de "backend"    -> tag "backend_vX.X.X"
 │
 ├── api/                  # funciones de Vercel
 ├── data-ia/              # pruebas de entrenamiento de modelo
